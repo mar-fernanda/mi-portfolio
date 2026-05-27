@@ -1,0 +1,109 @@
+<div class="bg"></div>
+
+<!-- LOADING -->
+<div *ngIf="!profile">
+  Cargando universo cósmico... 🌌
+</div>
+
+<!-- CV -->
+<div class="cv" *ngIf="profile">
+
+  <!-- HERO -->
+  <section class="card hero">
+    <h1>{{ profile.name }}</h1>
+    <h2>{{ profile.role }}</h2>
+    <div class="location">🌌 {{ profile.location }}</div>
+  </section>
+
+  <!-- PERFIL -->
+  <section class="card">
+    <h3 class="title">🚀 Perfil Profesional</h3>
+    <p>{{ profile.profile }}</p>
+  </section>
+
+  <!-- SKILLS -->
+  <section class="card">
+    <h3 class="title">💎 Stack Tecnológico</h3>
+
+    <div class="skills">
+      <span *ngFor="let skill of profile.skills">
+        {{ skill }}
+      </span>
+    </div>
+  </section>
+
+  <!-- EDUCACIÓN -->
+  <section class="card">
+    <h3 class="title">📚 Educación & Certificaciones</h3>
+
+    <ul>
+      <li *ngFor="let edu of profile.education">
+        {{ edu }}
+      </li>
+    </ul>
+  </section>
+
+  <!-- IDIOMAS -->
+  <section class="card">
+    <h3 class="title">🌍 Idiomas</h3>
+
+    <ul>
+      <li *ngFor="let lang of profile.languages">
+        {{ lang }}
+      </li>
+    </ul>
+  </section>
+
+</div>
+
+<!-- BOTÓN CHAT -->
+<div class="chat-toggle" (click)="chatOpen = !chatOpen">
+  <img src="/tadeo.png" alt="Tadeo">
+</div>
+
+<!-- CHAT -->
+<div class="chatbot" *ngIf="chatOpen">
+
+  <div class="chat-header">
+    <img src="/tadeo.png" alt="Tadeo">
+
+    <div>
+      <h4>Tadeo 😼</h4>
+      <span>Guardián Cósmico</span>
+    </div>
+  </div>
+
+  <div class="chat-body">
+
+    <div
+      *ngFor="let msg of messages"
+      class="message"
+      [ngClass]="msg.sender"
+    >
+      {{ msg.text }}
+    </div>
+
+    <div class="chat-links">
+      <a href="mailto:marfernanda97@gmail.com">📧 Email</a>
+
+      <a href="https://github.com/mar-fernanda" target="_blank">
+        🚀 GitHub
+      </a>
+
+      <a href="https://www.linkedin.com/in/maría-fernanda-díaz-sepúlveda-07157b186/" target="_blank">
+        💼 LinkedIn
+      </a>
+    </div>
+  </div>
+
+  <div class="chat-input">
+    <input
+      [(ngModel)]="userMessage"
+      placeholder="Habla con Tadeo..."
+      (keyup.enter)="sendMessage()"
+    >
+
+    <button (click)="sendMessage()">🚀</button>
+  </div>
+
+</div>
