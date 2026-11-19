@@ -5,7 +5,6 @@ import { HttpClient } from '@angular/common/http';
   providedIn: 'root'
 })
 export class ApiService {
-
   private apiUrl = 'http://localhost:8080/api/profile';
 
   constructor(private http: HttpClient) {}
@@ -13,4 +12,5 @@ export class ApiService {
   getProfile() {
     return this.http.get(this.apiUrl);
   }
+  
 }

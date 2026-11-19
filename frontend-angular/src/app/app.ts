@@ -1,83 +1,92 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { ApiService } from './services/api';
+import { ApiService } from './services/ApiService';
+import { AudioService } from './services/Audio.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    NgClass
-  ],
+  imports: [CommonModule, FormsModule, NgClass],
   templateUrl: './app.html',
   styleUrls: ['./app.css']
 })
 export class App implements OnInit {
-
-  profile: any;
+  profile: any = null;
   messages: any[] = [];
   userMessage = '';
+  musicPlaying = false;
   chatOpen = false;
+  sessionId = '';
 
-  constructor(private api: ApiService) {}
+  constructor(
+    private api: ApiService,
+    public audio: AudioService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
-  ngOnInit(): void {
-    this.api.getProfile().subscribe({
-      next: (data) => {
-        console.log('DATOS:', data);
-        this.profile = data;
-      },
-      error: (err) => {
-        console.error('ERROR:', err);
-      }
-    });
-  }
-
-sendMessage() {
-  if (!this.userMessage.trim()) return;
-
-  this.messages.push({
-    sender: 'user',
-    text: this.userMessage
+ngOnInit(): void {
+  void this.audio.startAmbience().then((started) => {
+    this.musicPlaying = started;
+    this.cdr.markForCheck();
   });
 
-  // Mensaje de carga inmediato
-  this.messages.push({
-    sender: 'bot',
-    text: 'Tadeo está consultando las estrellas... 🌌',
-    loading: true
+  this.sessionId = 'session_' + Math.random().toString(36).substring(2, 11);
+
+  this.api.getProfile().subscribe({
+    next: (data) => {
+      this.profile = data;
+      this.cdr.markForCheck();
+    },
+    error: (err) => {
+      console.error('ERROR PERFIL:', err);
+      this.cdr.markForCheck();
+    }
   });
+}
+sendMessage(): void {
+  const message = this.userMessage.trim();
+  if (!message) return;
 
-  // Petición limpia a n8n
-  fetch('http://localhost:5678/webhook/portfolio-chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: this.userMessage }) // Solo enviamos el JSON con el mensaje
-  })
-    .then(res => res.json())
-    .then(data => {
-      // Quitar mensaje de carga
-      this.messages = this.messages.filter(m => !m.loading);
+  this.messages.push({ sender: 'user', text: message });
+  this.messages.push({ sender: 'bot', text: 'Escribiendo…', loading: true });
+  this.userMessage = '';
 
-      // Respuesta real que viene desde n8n
-      this.messages.push({
-        sender: 'bot',
-        text: data.reply
-      });
-    })
-    .catch(err => {
-      console.error('Error en fetch:', err);
-      this.messages = this.messages.filter(m => !m.loading);
+  this.api.sendChatMessage(message, this.sessionId).subscribe({
+    next: (data) => {
+      this.messages = this.messages.filter((item) => !item.loading);
+
+      const reply =
+        data?.content?.parts?.[0]?.text ??
+        data?.output ??
+        data?.reply ??
+        data?.response ??
+        data?.text ??
+        'Lo siento, este gatito espacial no pude procesar la respuesta. Intenta de nuevo 😿';
+
+      this.messages.push({ sender: 'bot', text: reply });
+      this.cdr.markForCheck();
+    },
+    error: (err) => {
+      console.error('Error en el chat:', err);
+      this.messages = this.messages.filter((item) => !item.loading);
       this.messages.push({
         sender: 'bot',
         text: 'Tadeo está descansando, intenta de nuevo en unos segundos 😼'
-
       });
-    });
+      this.cdr.markForCheck();
+    }
+  });
+}
 
-  this.userMessage = '';
+async toggleMusic(): Promise<void> {
+  try {
+    await this.audio.toggleAmbience();
+    this.musicPlaying = !this.musicPlaying;
+    this.cdr.markForCheck();
+  } catch (err) {
+    console.error('No se pudo reproducir la música:', err);
+  }
 }
 }

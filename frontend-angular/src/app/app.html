@@ -56,6 +56,19 @@
 
 </div>
 
+<button
+  class="music-star"
+  type="button"
+  (click)="toggleMusic()"
+  [attr.aria-pressed]="musicPlaying"
+  [attr.aria-label]="musicPlaying ? 'Pausar música espacial' : 'Activar música espacial'"
+>
+  <span class="music-star__icon" aria-hidden="true">✦</span>
+  <span class="music-star__label">
+    {{ musicPlaying ? 'Pausar música' : 'Música espacial' }}
+  </span>
+</button>
+
 <!-- BOTÓN CHAT -->
 <div class="chat-toggle" (click)="chatOpen = !chatOpen">
   <img src="/tadeo.png" alt="Tadeo">
